@@ -4,6 +4,7 @@ import cv2
 from scipy import ndimage
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def load_cases(df, data_dir, n_scans = None):
     if n_scans is None:
@@ -35,7 +36,7 @@ def resize_volume(img):
     width_factor = 1 / width
     height_factor = 1 / height
     # Rotate
-    img = ndimage.rotate(img, 90, reshape=False)
+    # img = ndimage.rotate(img, 90, reshape=False)
     # Resize across z-axis
     img = ndimage.zoom(img, (width_factor, height_factor, depth_factor), order=1)
     return img
@@ -43,7 +44,9 @@ def resize_volume(img):
 def main():
     metadatafp = 'image_metadata.csv'
     df = pd.read_csv(metadatafp)
-    data_dir = '/home/tomasbencomo/final-project/data'
+    df = df[df['patient'] == 'Breast_MRI_001']
+    data_dir = '../cs235-data/'
+    # data_dir = '/home/tomasbencomo/final-project/data'
     scans = load_cases(df, data_dir, 1)
     er_labels = df['ER']
     pr_labels = df['PR']
@@ -51,8 +54,14 @@ def main():
     print("Completed loading!")
     for img in scans:
         print(img.shape)
+        for i in range(img.shape[2]):
+            plt.imshow(img[:, :, i])
+            plt.show()
     reshaped = resize_volume(img)
     print(reshaped.shape)
+    for i in range(reshaped.shape[2]):
+        plt.imshow(reshaped[:, :, i])
+        plt.show()
 
 
 if __name__ == '__main__':
