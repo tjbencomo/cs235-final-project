@@ -1,3 +1,4 @@
+import json
 import os
 import numpy as np
 import pydicom as dicom
@@ -29,16 +30,22 @@ def search_directory(startdir):
         uid = list(listdir_nohidden(os.path.join(startdir, patient)))[0]
         date = list(listdir_nohidden(os.path.join(startdir, patient, uid)))[0]
         scan_dirs = listdir_nohidden(os.path.join(startdir, patient, uid, date))
-        scan_dirs = [f for f in scan_dirs if '.json' not in f]
-        for scd in scan_dirs:
-            scan = load_scan(os.path.join(startdir, patient, uid, date, scd))
-            metadata.append((patient, scan.shape[0], scan.shape[1], scan.shape[2]))
+        scan_files = [f for f in scan_dirs if '.json' in f]
+        for fp in scan_files:
+            with open(os.path.join(startdir, patient, uid, date, fp)) as f:
+                js = json.load(f)
+                scantype = js['Total'][len(js['Total'])-1].rstrip('\n')
+            metadata.append((patient, os.path.join(patient, uid, date, fp), scantype))
+        # for scd in scan_dirs:
+        #     scan = load_scan(os.path.join(startdir, patient, uid, date, scd))
+        #     metadata.append((patient, scan.shape[0], scan.shape[1], scan.shape[2]))
     return metadata
 
 def main():
     sdir = '/Users/tomasbencomo/code/cs235-data'
     met = search_directory(sdir)
-    df = pd.DataFrame(met, columns = ['patient', 'x', 'y', 'z'])
+    # df = pd.DataFrame(met, columns = ['patient', 'x', 'y', 'z'])
+    df = pd.DataFrame(met, columns = ['patient', 'filepath', 'scan_type'])
     df.to_csv('image_sizes.csv', index=False, header=True)
 
 if __name__ == '__main__':
