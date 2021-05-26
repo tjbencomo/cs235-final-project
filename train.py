@@ -1,6 +1,7 @@
 import torch.optim as optim
 import torch.nn as nn
 from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
 from torchvision import transforms
 import torch
 import numpy as np
@@ -11,7 +12,7 @@ class DataSet(torch.utils.data.Dataset):
         self.labels = labels
         self.images = images
         self.transform = transforms.Compose([
-            transforms.Resize((224, 224)),
+            transforms.Resize((256, 256, 64)),
             transforms.ToTensor()
             ])
     
@@ -50,7 +51,26 @@ def train(net, training_generator, val_generator, learning_rate = 0.0001, num_ep
     print('\n Accuracy is ', str(np.mean(accuracy) * 100))
 
 def main():
-  train(net, training_generator, val_generator)
+    metadatafp = 'image_metadata.csv'
+    df = pd.read_csv(metadatafp)
+    df = df[df['patient'] == 'Breast_MRI_001']
+    data_dir = '../cs235-data/'
+    # data_dir = '/home/tomasbencomo/final-project/data'
+    scans = loader.load_cases(df, data_dir, 1)
+    er_labels = df['ER']
+    pr_labels = df['PR']
+    her2_labels = df['HER2']
+    print("Completed loading!")
+
+    X_train, X_test, y_train, y_test = train_test_split(scans, er_labels, test_size=.2, random_state=42)
+
+    train_dataset = DataSet(X_train, y_train)
+    val_dataset = DataSet(X_test, y_test)
+
+    train_gen = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=True)
+    val_gen = torch.utils.data.DataLoader(val_dataset, batch_size, shuffle=True)
+
+    train(net, train_gen, val_gen)
 
 if __name__ == '__main__':
     main()
