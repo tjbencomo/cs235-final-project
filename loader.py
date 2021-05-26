@@ -1,7 +1,10 @@
+"""
+Provides helper functions to load individual scans and patients
+"""
+
 import os
 import numpy as np
 import pydicom as dicom
-# import matplotlib.pyplot as plt
 
 def load_scan(scan_dir):
     list_of_slices = os.listdir(scan_dir)
@@ -16,6 +19,18 @@ def load_scan(scan_dir):
     slices.reverse()
     vol = np.stack(slices, axis=-1)
     return vol
+
+def load_cases(df, data_dir, n_scans = None):
+    if n_scans is None:
+        n_scans = df.shape[0]
+    scans = []
+    for filepath in df['filepath'].tolist()[:n_scans]:
+        print(f"Loading patient {filepath.split('/')[0]}!")
+        fp = os.path.join(data_dir, filepath)
+        img = loader.load_scan(fp)
+        scans.append(img)
+    print(f"Loaded {len(scans)} scans!")
+    return scans
 
 # def main():
 #     # data_dir = '/Users/tomasbencomo/code/cs235-data'
