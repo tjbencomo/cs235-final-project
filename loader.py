@@ -5,8 +5,9 @@ Provides helper functions to load individual scans and patients
 import os
 import numpy as np
 import pydicom as dicom
+from scipy import ndimage
 
-def load_scan(scan_dir):
+def load_scan(scan_dir, transform=None):
     list_of_slices = os.listdir(scan_dir)
     locations = []
     slices = []
@@ -18,19 +19,44 @@ def load_scan(scan_dir):
     slices = [x for _,x in sorted(zip(locations, slices))]
     slices.reverse()
     vol = np.stack(slices, axis=-1)
+    if transform is not None:
+        vol = transform(vol)
     return vol
 
-def load_cases(df, data_dir, n_scans = None):
+def load_cases(df, data_dir, n_scans = None, transform=None):
     if n_scans is None:
         n_scans = df.shape[0]
     scans = []
     for filepath in df['filepath'].tolist()[:n_scans]:
         print(f"Loading patient {filepath.split('/')[0]}!")
         fp = os.path.join(data_dir, filepath)
-        img = loader.load_scan(fp)
+        img = load_scan(fp, transform)
         scans.append(img)
     print(f"Loaded {len(scans)} scans!")
     return scans
+
+def resize_volume(img):
+    """Resize across z-axis"""
+    # Set the desired depth
+    desired_depth = 64
+    desired_width = 256
+    desired_height = 256
+    # Get current depth
+    current_depth = img.shape[-1]
+    current_width = img.shape[0]
+    current_height = img.shape[1]
+    # Compute depth factor
+    depth = current_depth / desired_depth
+    width = current_width / desired_width
+    height = current_height / desired_height
+    depth_factor = 1 / depth
+    width_factor = 1 / width
+    height_factor = 1 / height
+    # Rotate
+    # img = ndimage.rotate(img, 90, reshape=False)
+    # Resize across z-axis
+    img = ndimage.zoom(img, (width_factor, height_factor, depth_factor), order=1)
+    return img
 
 # def main():
 #     # data_dir = '/Users/tomasbencomo/code/cs235-data'
