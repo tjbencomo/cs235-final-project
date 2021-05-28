@@ -21,6 +21,7 @@ def load_scan(scan_dir, transform=None):
     vol = np.stack(slices, axis=-1)
     if transform is not None:
         vol = transform(vol)
+    vol = vol.astype(np.int16)
     return vol
 
 def load_cases(df, data_dir, n_scans = None, transform=None):
@@ -35,12 +36,8 @@ def load_cases(df, data_dir, n_scans = None, transform=None):
     print(f"Loaded {len(scans)} scans!")
     return scans
 
-def resize_volume(img):
+def resize_volume(img, desired_width=128, desired_height=128, desired_depth=64):
     """Resize across z-axis"""
-    # Set the desired depth
-    desired_depth = 64
-    desired_width = 256
-    desired_height = 256
     # Get current depth
     current_depth = img.shape[-1]
     current_width = img.shape[0]
