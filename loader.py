@@ -36,7 +36,7 @@ def load_cases(df, data_dir, n_scans = None, transform=None):
     print(f"Loaded {len(scans)} scans!")
     return scans
 
-def resize_volume(img, desired_width=128, desired_height=128, desired_depth=64):
+def resize_volume(img, desired_width=128, desired_height=128, desired_depth=32):
     """Resize across z-axis"""
     # Get current depth
     current_depth = img.shape[-1]
